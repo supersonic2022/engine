@@ -193,4 +193,3 @@ void Map::addMatchFeatState(CamIDType _camID, std::vector<cv::Point2d>& _pts, st
 }
 
 
-

@@ -1,7 +1,7 @@
 #include "FeatureManager.h"
 #include "utility.h"
 
-void FeatureManager::processImage(CamIDType _camID, ImgData _img)
+int FeatureManager::processImage(CamIDType _camID, ImgData _img)
 {
 	cv::Mat curImg = cv::imread(_img._img_dir, 0);
 	if (isFirst)
@@ -92,7 +92,7 @@ void FeatureManager::processImage(CamIDType _camID, ImgData _img)
 	}
 	curImg.copyTo(m_latestImg);
 
-	checkAndInit();
+	return checkAndInit();
 }
 
 bool FeatureManager::checkMotion(FeatIDType _featID){
@@ -155,7 +155,7 @@ void FeatureManager::generateInitialGuess(
 	return;
 }
 
-bool FeatureManager::initializePosition(FeatIDType _featID) {
+int FeatureManager::initializePosition(FeatIDType _featID) {
 	// Organize camera poses and feature observations properly.
 	std::vector<Eigen::Isometry3d,
 		Eigen::aligned_allocator<Eigen::Isometry3d> > cam_poses;
@@ -294,9 +294,12 @@ bool FeatureManager::initializePosition(FeatIDType _featID) {
 	featState->m_x_G = T_c0_w.linear()*final_position + T_c0_w.translation();
 
 	if (is_valid_solution)
+	{
 		featState->m_isInit = true;
+		return camIDList.size();
+	}
 
-	return is_valid_solution;
+	return 0;
 }
 
 void FeatureManager::cost(const Eigen::Isometry3d& T_c0_ci,
@@ -359,8 +362,9 @@ void FeatureManager::jacobian(const Eigen::Isometry3d& T_c0_ci,
 	return;
 }
 
-void FeatureManager::checkAndInit()
+int FeatureManager::checkAndInit()
 {
+	int total_cam = 0;
 	valideTracks.clear();
 	for (int i = 0; i < lostTracks.size(); i++)
 	{
@@ -369,11 +373,35 @@ void FeatureManager::checkAndInit()
 			invalidTracks.push_back(lostTracks[i]);
 			continue;
 		}
-		if (!initializePosition(lostTracks[i]))
+
+		int cam_size = initializePosition(lostTracks[i]);
+		if (cam_size != 0)
 		{
+			total_cam += cam_size;
 			invalidTracks.push_back(lostTracks[i]);
 			continue;
 		}
 		valideTracks.push_back(lostTracks[i]);
+	}
+	return total_cam;
+}
+
+void FeatureManager::removeInvalid()
+{
+	for (int i = 0; i < invalidTracks.size(); ++i)
+	{
+		FeatIDType featID = invalidTracks[i];
+		std::vector<CamIDType> camIDList;
+		m_map->getCamStateList(featID, camIDList);
+		for (CamIDType camID : camIDList)
+			m_map->deleteMapNode(camID, featID);
+	}
+	for (int i = 0; i < valideTracks.size(); ++i)
+	{
+		FeatIDType featID = valideTracks[i];
+		std::vector<CamIDType> camIDList;
+		m_map->getCamStateList(featID, camIDList);
+		for (CamIDType camID : camIDList)
+			m_map->deleteMapNode(camID, featID);
 	}
 }

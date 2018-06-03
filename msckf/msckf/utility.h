@@ -20,6 +20,8 @@ Eigen::Vector4d quaternionMultiplication(
 	const Eigen::Vector4d& q1,
 	const Eigen::Vector4d& q2);
 
+Eigen::Vector4d smallAngleQuaternion(
+	const Eigen::Vector3d& dtheta);
 
 
 

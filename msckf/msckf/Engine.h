@@ -18,12 +18,58 @@ public:
 
 	CamIDType augmentState();
 
-	void updateState();
+	void updateState(int jacobian_row_size);
 
 	void process();
 
+
+
 private:
-	void RK4(Eigen::Vector3d w, Eigen::Vector3d a, double dt);
+	void RK4(
+		Eigen::Vector3d w, 
+		Eigen::Vector3d a, 
+		double dt);
+
+	void featureJacobian(
+		const FeatIDType& featID,
+		const std::vector<CamIDType>& camIDList,
+		Eigen::MatrixXd& H_x, 
+		Eigen::VectorXd& r);
+
+	void measurementJacobian(
+		const CamIDType& camID,
+		const FeatIDType& featID,
+		Eigen::Matrix<double, 2, 6>& H_x,
+		Eigen::Matrix<double, 2, 3>& H_f,
+		Eigen::Vector2d& r);
+
+	//need add chi square table
+	bool gatingTest(
+		const Eigen::MatrixXd& H, 
+		const Eigen::VectorXd& r, 
+		const int& dof) {
+
+		//Eigen::MatrixXd P1 = H * m_P * H.transpose();
+		//Eigen::MatrixXd P2 = OBSERVATION_NOISE *
+		//	Eigen::MatrixXd::Identity(H.rows(), H.rows());
+		//double gamma = r.transpose() * (P1 + P2).ldlt().solve(r);
+
+		//if (gamma < chi_squared_test_table[dof]) {
+		//	//cout << "passed" << endl;
+		//	return true;
+		//}
+		//else {
+		//	cout << "failed" << endl;
+		//	return false;
+		//}
+
+		return true;
+	}
+
+	void measurementUpdate(
+		const Eigen::MatrixXd& H, 
+		const Eigen::VectorXd& r);
+
 
 	//global map
 	Map m_map;

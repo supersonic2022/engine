@@ -180,6 +180,7 @@ public:
 		while (node!= nullptr);
 	}
 
+
 private:
 	std::map<CamIDType, CamState*> mm_camServer;
 	std::map<FeatIDType, FeatState*> mm_featServer;

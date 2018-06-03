@@ -127,6 +127,25 @@ Eigen::Vector4d quaternionMultiplication(
 	return q;
 }
 
+Eigen::Vector4d smallAngleQuaternion(
+	const Eigen::Vector3d& dtheta) {
+
+	Eigen::Vector3d dq = dtheta / 2.0;
+	Eigen::Vector4d q;
+	double dq_square_norm = dq.squaredNorm();
+
+	if (dq_square_norm <= 1) {
+		q.head<3>() = dq;
+		q(3) = std::sqrt(1 - dq_square_norm);
+	}
+	else {
+		q.head<3>() = dq;
+		q(3) = 1;
+		q = q / std::sqrt(1 + dq_square_norm);
+	}
+
+	return q;
+}
 
 
 

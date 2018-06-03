@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include <Eigen/Eigen>
 //include to use eigen stl container
 #include <Eigen/StdVector>
 
@@ -25,6 +25,7 @@ typedef Eigen::Matrix < double, 15, 15 > Matrix15d;
 typedef Eigen::Matrix < double, 12, 12 > Matrix12d;
 typedef Eigen::Matrix < double, 15, 12 > Matrix15_12d;
 
+const double OBSERVATION_NOISE = 0.01;
 const int DELAY_OBSERVATION = 4;
 //use for check motion
 const int THRESH_TRANSLATION = 0.2;
