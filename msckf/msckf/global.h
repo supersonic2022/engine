@@ -26,6 +26,14 @@ typedef Eigen::Matrix < double, 12, 12 > Matrix12d;
 typedef Eigen::Matrix < double, 15, 12 > Matrix15_12d;
 
 const int DELAY_OBSERVATION = 4;
+//use for check motion
+const int THRESH_TRANSLATION = 0.2;
+//use for LM dump
+const int INITIAL_DAMP = 1e-3;
+//BA params
+const int NUM_ITERATION = 10;
+const double PRECISION = 5e-7;
+const double HUBER_EPSILON = 0.01;
 
 enum Type
 {

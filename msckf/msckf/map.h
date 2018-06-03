@@ -149,6 +149,37 @@ public:
 		return mm_featServer[_featID];
 	}
 
+	CamState* getCamState(CamIDType _camID)
+	{
+		return mm_camServer[_camID];
+	}
+
+	Eigen::Vector2d getPoint(CamIDType _camID, FeatIDType _featID)
+	{
+		CamState* camState = mm_camServer[_camID];
+		MapNode* node = camState->p_featNode;
+		while (node != nullptr)
+		{
+			if (node->m_featID == _featID)
+				return node->m_point;
+			node = node->p_nextFeat;
+		}
+		return Eigen::Vector2d::Zero();
+	}
+
+	void getCamStateList(FeatIDType _featId, std::vector<CamIDType>& camIDList)
+	{
+		camIDList.clear();
+		FeatState* p_featState = mm_featServer[_featId];
+		MapNode* node = p_featState->p_camNode;
+		do
+		{
+			camIDList.push_back(node->m_camID);
+			node = node->p_nextCam;
+		}
+		while (node!= nullptr);
+	}
+
 private:
 	std::map<CamIDType, CamState*> mm_camServer;
 	std::map<FeatIDType, FeatState*> mm_featServer;

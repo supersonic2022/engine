@@ -146,10 +146,9 @@ void Engine::process()
 			m_benchmark->mq_imgQueue.pop();		
 			
 			CamIDType camID = augmentState();
-			
+		
 			m_featManager.processImage(camID, t_img);
 
-			
 
 		}
 	}
