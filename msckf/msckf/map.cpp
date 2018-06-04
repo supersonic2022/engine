@@ -173,7 +173,7 @@ CamIDType Map::addCamState(Eigen::Vector4d _q_C_G, Eigen::Vector3d _p_G)
 	return camState->m_camID;
 }
 
-void Map::addNewFeatState(CamIDType _camID, std::vector<cv::Point2d>& _pts, std::vector<FeatIDType>& _ptID, int startIdx)
+void Map::addNewFeatState(CamIDType _camID, std::vector<cv::Point2f>& _pts, std::vector<FeatIDType>& _ptID, int startIdx)
 {
 	for (int i = startIdx; i < _pts.size(); i++)
 	{
@@ -184,7 +184,7 @@ void Map::addNewFeatState(CamIDType _camID, std::vector<cv::Point2d>& _pts, std:
 	}
 }
 
-void Map::addMatchFeatState(CamIDType _camID, std::vector<cv::Point2d>& _pts, std::vector<FeatIDType>& _ptID)
+void Map::addMatchFeatState(CamIDType _camID, std::vector<cv::Point2f>& _pts, std::vector<FeatIDType>& _ptID)
 {
 	for (int i = 0; i < _pts.size(); i++)
 	{

@@ -4,6 +4,7 @@
 int FeatureManager::processImage(CamIDType _camID, ImgData _img)
 {
 	cv::Mat curImg = cv::imread(_img._img_dir, 0);
+	cv::waitKey(0);
 	if (isFirst)
 	{
 		featPoints.clear();
@@ -18,9 +19,14 @@ int FeatureManager::processImage(CamIDType _camID, ImgData _img)
 		m_mask.create(curImg.size(), CV_8UC1);
 		m_mask.setTo(1);
 
-		std::vector<cv::Point2d> curPoints;
+		std::vector<cv::Point2f> curPoints;
 		std::vector<uchar> status;
-		std::vector<double> err;
+		std::vector<float> err;
+		
+		//cv::imshow("last", m_latestImg);
+		//cv::imshow("current", curImg);
+		//cv::waitKey(0);
+
 		cv::calcOpticalFlowPyrLK(m_latestImg, curImg, featPoints, curPoints, status, err);
 		
 		int cnt = 0;
@@ -405,3 +411,5 @@ void FeatureManager::removeInvalid()
 			m_map->deleteMapNode(camID, featID);
 	}
 }
+
+

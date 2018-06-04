@@ -71,6 +71,11 @@ private:
 		const Eigen::VectorXd& r);
 
 
+	void findRedundantCamStates(
+		std::vector<CamIDType>& camIDList);
+
+	void pruneCamStateBuffer();
+
 	//global map
 	Map m_map;
 	//camera state in sliding window

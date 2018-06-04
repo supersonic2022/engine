@@ -36,6 +36,9 @@ const int NUM_ITERATION = 10;
 const double PRECISION = 5e-7;
 const double HUBER_EPSILON = 0.01;
 
+
+const int MAX_CAM_STATE = 30;
+
 enum Type
 {
 	IMU = 0,

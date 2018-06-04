@@ -1,6 +1,6 @@
 #include "Engine.h"
 #include "utility.h"
-#include <Eigen/SPQRSupport>
+//#include <Eigen/SPQRSupport>
 
 
 void Engine::init(BenchmarkNode* _benchmark)
@@ -186,6 +186,8 @@ void Engine::process()
 			int jacobian_row_size = m_featManager.processImage(camID, t_img);
 
 			updateState(jacobian_row_size);
+
+			pruneCamStateBuffer();
 		}
 	}
 }
@@ -292,11 +294,22 @@ void Engine::measurementUpdate(
 
 	if (H.rows() > H.cols()) {
 		// Convert H to a sparse matrix.
+		//Eigen::SparseMatrix<double> H_sparse = H.sparseView();
+
+		//// Perform QR decompostion on H_sparse.
+		//Eigen::SPQR<Eigen::SparseMatrix<double> > spqr_helper;
+		//spqr_helper.setSPQROrdering(1/*SPQR_ORDERING_NATURAL*/);
+		//spqr_helper.compute(H_sparse);
+
+		//Eigen::MatrixXd H_temp;
+		//Eigen::VectorXd r_temp;
+		//(spqr_helper.matrixQ().transpose() * H).evalTo(H_temp);
+		//(spqr_helper.matrixQ().transpose() * r).evalTo(r_temp);
+
 		Eigen::SparseMatrix<double> H_sparse = H.sparseView();
 
-		// Perform QR decompostion on H_sparse.
-		Eigen::SPQR<Eigen::SparseMatrix<double> > spqr_helper;
-		spqr_helper.setSPQROrdering(1/*SPQR_ORDERING_NATURAL*/);
+
+		Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::NaturalOrdering<int>> spqr_helper;
 		spqr_helper.compute(H_sparse);
 
 		Eigen::MatrixXd H_temp;
@@ -367,7 +380,7 @@ void Engine::measurementUpdate(
 
 	// Update state covariance.
 	Eigen::MatrixXd I_KH = Eigen::MatrixXd::Identity(K.rows(), H_thin.cols()) - K*H_thin;
-	//state_server.state_cov = I_KH*state_server.state_cov*I_KH.transpose() +
+	//m_P = I_KH*m_P*I_KH.transpose() +
 	//  K*K.transpose()*Feature::observation_noise;
 	m_P = I_KH*m_P;
 
@@ -375,6 +388,137 @@ void Engine::measurementUpdate(
 	//Eigen::MatrixXd state_cov_fixed = (m_P +
 	//	m_P.transpose()) / 2.0;
 	//m_P = state_cov_fixed;
+
+	return;
+}
+
+//easy method
+void Engine::findRedundantCamStates(
+	std::vector<CamIDType>& camIDList) {
+
+	for (int i = 1; i < mv_camWindow.size() - 1;)
+	{
+		camIDList.push_back(mv_camWindow[i]);
+		i += 3;
+	}
+
+	return;
+}
+
+
+
+void Engine::pruneCamStateBuffer() {
+
+	if (mv_camWindow.size() < MAX_CAM_STATE)
+		return;
+
+	// Find two camera states to be removed.
+	std::vector<CamIDType> rm_cam_state_ids(0);
+	findRedundantCamStates(rm_cam_state_ids);
+
+	// Find the size of the Jacobian matrix.
+	int jacobian_row_size = 0;
+	for (auto& item : m_featManager.featTracks) {
+		FeatState* feature = m_map.getFeatState(item);
+		// Check how many camera states to be removed are associated
+		// with this feature.
+		std::vector<CamIDType> involved_cam_state_ids;
+		m_map.getCamStateList(item, involved_cam_state_ids);
+
+		if (involved_cam_state_ids.size() == 0) continue;
+		if (involved_cam_state_ids.size() == 1) {
+			m_map.deleteMapNode(item, involved_cam_state_ids[0]);
+		}
+
+		if (!feature->m_isInit) {
+			// Check if the feature can be initialize.
+			if (!m_featManager.checkMotion(item)) {
+				// If the feature cannot be initialized, just remove
+				// the observations associated with the camera states
+				// to be removed.
+				for (const auto& cam_id : involved_cam_state_ids)
+					m_map.deleteMapNode(cam_id, item);
+				continue;
+			}
+			else {
+				if (!m_featManager.initializePosition(item)) {
+					for (const auto& cam_id : involved_cam_state_ids)
+						m_map.deleteMapNode(cam_id, item);
+					continue;
+				}
+			}
+		}
+
+		jacobian_row_size += 2 * involved_cam_state_ids.size() - 3;
+	}
+
+	//cout << "jacobian row #: " << jacobian_row_size << endl;
+
+	// Compute the Jacobian and residual.
+	Eigen::MatrixXd H_x = Eigen::MatrixXd::Zero(jacobian_row_size,
+		15 + 6 * mv_camWindow.size());
+	Eigen::VectorXd r = Eigen::VectorXd::Zero(jacobian_row_size);
+	int stack_cntr = 0;
+
+	for (auto& item : m_featManager.featTracks) {
+		FeatState* feature = m_map.getFeatState(item);
+		// Check how many camera states to be removed are associated
+		// with this feature.
+
+		std::vector<CamIDType> involved_cam_state_ids;
+		m_map.getCamStateList(item, involved_cam_state_ids);
+
+		if (involved_cam_state_ids.size() == 0) continue;
+
+		Eigen::MatrixXd H_xj;
+		Eigen::VectorXd r_j;
+		featureJacobian(item, involved_cam_state_ids, H_xj, r_j);
+
+		if (gatingTest(H_xj, r_j, involved_cam_state_ids.size())) {
+			H_x.block(stack_cntr, 0, H_xj.rows(), H_xj.cols()) = H_xj;
+			r.segment(stack_cntr, r_j.rows()) = r_j;
+			stack_cntr += H_xj.rows();
+		}
+
+		for (const auto& cam_id : involved_cam_state_ids)
+			m_map.deleteMapNode(cam_id, item);
+	}
+
+	H_x.conservativeResize(stack_cntr, H_x.cols());
+	r.conservativeResize(stack_cntr);
+
+	// Perform measurement update.
+	measurementUpdate(H_x, r);
+
+	for (int i = 0; i < rm_cam_state_ids.size(); ++i) 
+	{
+		int cam_state_start = 15 + 6 * i;
+		int cam_state_end = cam_state_start + 6;
+
+		// Remove the corresponding rows and columns in the state
+		// covariance matrix.
+		if (cam_state_end < m_P.rows()) {
+			m_P.block(cam_state_start, 0, m_P.rows() - cam_state_end, m_P.cols()) = 
+				m_P.block(cam_state_end, 0, m_P.rows() - cam_state_end, m_P.cols());
+
+			m_P.block(0, cam_state_start,
+				m_P.rows(),
+				m_P.cols() - cam_state_end) =
+				m_P.block(0, cam_state_end,
+					m_P.rows(),
+					m_P.cols() - cam_state_end);
+
+			m_P.conservativeResize(
+				m_P.rows() - 6, m_P.cols() - 6);
+		}
+		else {
+			m_P.conservativeResize(
+				m_P.rows() - 6, m_P.cols() - 6);
+		}
+
+		// Remove this camera state in the state vector.
+		mv_camWindow.erase(mv_camWindow.begin() + 1 + 2 * i);
+	}
 
 	return;
 }

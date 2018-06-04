@@ -141,8 +141,8 @@ public:
 	void clearMap();
 
 	CamIDType addCamState(Eigen::Vector4d _q_C_G, Eigen::Vector3d _p_G);
-	void addNewFeatState(CamIDType _camID, std::vector<cv::Point2d>& _pts, std::vector<FeatIDType>& _ptID, int startIdx = 0);
-	void addMatchFeatState(CamIDType _camID, std::vector<cv::Point2d>& _pts, std::vector<FeatIDType>& _ptID);
+	void addNewFeatState(CamIDType _camID, std::vector<cv::Point2f>& _pts, std::vector<FeatIDType>& _ptID, int startIdx = 0);
+	void addMatchFeatState(CamIDType _camID, std::vector<cv::Point2f>& _pts, std::vector<FeatIDType>& _ptID);
 
 	FeatState* getFeatState(FeatIDType _featID)
 	{
