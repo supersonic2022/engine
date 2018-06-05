@@ -1,6 +1,7 @@
 #include "Engine.h"
 #include "utility.h"
 //#include <Eigen/SPQRSupport>
+#include "visualization.h"
 
 
 void Engine::init(BenchmarkNode* _benchmark)
@@ -165,18 +166,26 @@ void Engine::process()
 {
 	while (m_benchmark->mq_maskQueue.size())
 	{
+		poses.push_back(m_imuState.m_p_G);
+		cout << endl << m_imuState.m_p_G << endl << endl;
+
 		int flag = m_benchmark->mq_maskQueue.front();
 		m_benchmark->mq_maskQueue.pop();
 
 		if (flag == IMU)
 		{
+			cout << "imu" << endl;
+
 			ImuData t_imu = m_benchmark->mq_imuQueue.front();
 			m_benchmark->mq_imuQueue.pop();
 
 			predictState(t_imu);
+
 		}
 		if (flag == IMG)
 		{
+
+			cout << "img" << endl;
 
 			ImgData t_img = m_benchmark->mq_imgQueue.front();
 			m_benchmark->mq_imgQueue.pop();		
@@ -189,6 +198,7 @@ void Engine::process()
 
 			pruneCamStateBuffer();
 		}
+
 	}
 }
 

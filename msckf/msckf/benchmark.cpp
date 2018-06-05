@@ -2,7 +2,7 @@
 
 BenchmarkNode::BenchmarkNode()
 {
-	dataset = new EuRoCData("E:/euroc/mav0");
+	dataset = new EuRoCData("W:/vio/datasets/MH_01_easy/mav0");
 }
 
 BenchmarkNode::~BenchmarkNode()

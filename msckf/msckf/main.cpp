@@ -1,6 +1,7 @@
 #include "map.h"
 #include "benchmark.h"
 #include "Engine.h"
+#include "visualization.h"
 
 int main()
 {
@@ -9,7 +10,12 @@ int main()
 
 	Engine engine;
 	engine.init(&benchmark);
+
+	std::thread viz(run);
+
 	engine.process();
+
+	viz.join();
 
 	return 0;
 }

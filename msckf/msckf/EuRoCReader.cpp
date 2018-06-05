@@ -37,7 +37,7 @@ void EuRoCData::readImgsAndParams()
 		img_timestamps.push_back(cam_vec);
 		cout << num_of_imgs << endl;
 
-		cv::FileStorage param_file("E:\euroc\mav0\cam0/" + sensor_yaml, cv::FileStorage::READ);
+		cv::FileStorage param_file("W:\vio/datasets/MH_01_easy/mav0/cam0/" + sensor_yaml, cv::FileStorage::READ);
 		CameraParam cp;
 		param_file["rate_hz"] >> cp.rate_hz;
 		param_file["camera_model"] >> cp.camera_model;
@@ -94,7 +94,7 @@ void EuRoCData::readImusAndParams()
 		imu_timestamps.push_back(imu_pair_vec);
 		cout << num_of_imus << endl;
 
-		cv::FileStorage param_file("E:\euroc\mav0\imu0/" + sensor_yaml, cv::FileStorage::READ);
+		cv::FileStorage param_file("W:\vio/datasets/MH_01_easy/mav0/imu0/" + sensor_yaml, cv::FileStorage::READ);
 		IMUParam ip;
 		param_file["rate_hz"] >> ip.rate_hz;
 		param_file["gyroscope_noise_density"] >> ip.gyroscope_noise_density;

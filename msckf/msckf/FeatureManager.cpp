@@ -53,11 +53,15 @@ int FeatureManager::processImage(CamIDType _camID, ImgData _img)
 		status.clear();
 		cv::findFundamentalMat(featPoints, curPoints, status);
 
+		cv::Mat showImg;
+		cv::cvtColor(curImg, showImg, cv::COLOR_GRAY2BGR);
+
 		cnt = 0;
 		for (int i = 0; i < status.size(); i++)
 		{
 			if (status[i])
 			{
+				cv::line(showImg, featPoints[i], curPoints[i], cv::Scalar(0, 255, 0), 2);
 				featPoints[cnt] = curPoints[i];
 				cv::circle(m_mask, featPoints[cnt], RADIUS, 0, -1);
 				featTracks[cnt] = featTracks[i];
@@ -70,6 +74,9 @@ int FeatureManager::processImage(CamIDType _camID, ImgData _img)
 		}
 		featPoints.resize(cnt);
 		featTracks.resize(cnt);
+
+		cv::imshow("match", showImg);
+		cv::waitKey(10);
 
 
 		m_map->addMatchFeatState(_camID, featPoints, featTracks);
@@ -381,14 +388,15 @@ int FeatureManager::checkAndInit()
 		}
 
 		int cam_size = initializePosition(lostTracks[i]);
-		if (cam_size != 0)
+		if (cam_size == 0)
 		{
-			total_cam += cam_size;
 			invalidTracks.push_back(lostTracks[i]);
 			continue;
-		}
+		}	
+		total_cam += 2 * cam_size;
 		valideTracks.push_back(lostTracks[i]);
 	}
+	
 	return total_cam;
 }
 

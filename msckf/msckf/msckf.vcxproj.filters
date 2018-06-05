@@ -39,6 +39,9 @@
     <ClInclude Include="FeatureManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="visualization.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EuRoCReader.cpp">
@@ -63,6 +66,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="FeatureManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="visualization.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
